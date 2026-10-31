@@ -1,4 +1,137 @@
-# Suthan Voice Translator 
-Tamil and multilingual voice translation 
-Supports Tamil, English and other languages
-Voice translation app for iPhone 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suthan Voice Translator</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #eef4ff;
+  text-align: center;
+  padding: 20px;
+}
+
+h1 { color: #174ea6; }
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 18px;
+  box-shadow: 0 3px 12px #ccc;
+}
+
+select, button, textarea {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  font-size: 17px;
+  box-sizing: border-box;
+}
+
+button {
+  background: #1769e0;
+  color: white;
+  border: none;
+  border-radius: 10px;
+}
+
+textarea {
+  height: 110px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎤 Suthan Voice Translator</h1>
+<p>தமிழ் • English • Voice Translation</p>
+
+<div class="card">
+
+<h3>From Language</h3>
+<select id="from">
+<option value="ta-IN">Tamil</option>
+<option value="en-GB">English</option>
+</select>
+
+<h3>To Language</h3>
+<select id="to">
+<option value="en-GB">English</option>
+<option value="ta-IN">Tamil</option>
+</select>
+
+<button onclick="startVoice()">🎤 Speak</button>
+
+<h3>Your Speech</h3>
+<textarea id="speech" placeholder="Your words appear here"></textarea>
+
+<button onclick="translateText()">🌍 Translate</button>
+
+<h3>Translation</h3>
+<textarea id="result" readonly></textarea>
+
+<button onclick="speakResult()">🔊 Listen</button>
+
+</div>
+
+<script>
+function startVoice() {
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert("Speech recognition is not supported in this browser.");
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = document.getElementById("from").value;
+
+  recognition.onresult = function(event) {
+    document.getElementById("speech").value =
+      event.results[0][0].transcript;
+  };
+
+  recognition.onerror = function(event) {
+    alert("Voice error: " + event.error);
+  };
+
+  recognition.start();
+}
+
+async function translateText() {
+  const text = document.getElementById("speech").value.trim();
+  const from = document.getElementById("from").value.split("-")[0];
+  const to = document.getElementById("to").value.split("-")[0];
+  const result = document.getElementById("result");
+
+  if (!text) {
+    alert("Please speak or type something first.");
+    return;
+  }
+
+  if (from === to) {
+    result.value = text;
+    return;
+  }
+
+  result.value = "Translation service not connected yet.";
+}
+
+function speakResult() {
+  const text = document.getElementById("result").value;
+
+  if (!text) return;
+
+  const speech = new SpeechSynthesisUtterance(text);
+  speech.lang = document.getElementById("to").value;
+
+  window.speechSynthesis.speak(speech);
+}
+</script>
+
+</body>
+</html>
