@@ -73,7 +73,7 @@ $("mic").addEventListener("click",()=>{
  if(!Recognition){micMessage("Safari இந்த Speech Recognition வசதியை வழங்கவில்லை. Google Translate போன்ற செயலியில் பேசிப் பெற்ற உரையை இங்கே ஒட்டலாம்.",true);return;}
  try{
  if(listening){micMessage("ஏற்கெனவே பதிவு நடக்கிறது.");return;}
- recognition=new Recognition();recognition.lang=source.value;recognition.continuous=false;recognition.interimResults=true;
+ recognition=new Recognition()recognition.lang = "ta-IN";recognition.continuous=false;recognition.interimResults=true;
  recognition.onstart=()=>{listening=true;micMessage("கேட்கிறது… இப்போது பேசுங்கள்.");};
  recognition.onresult=e=>{
  let final="",interim="";
