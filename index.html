@@ -1,137 +1,132 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ta">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Suthan Voice Translator</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Suthan Voice Translator v2</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #eef4ff;
-  text-align: center;
-  padding: 20px;
-}
-
-h1 { color: #174ea6; }
-
-.card {
-  background: white;
-  padding: 20px;
-  border-radius: 18px;
-  box-shadow: 0 3px 12px #ccc;
-}
-
-select, button, textarea {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  font-size: 17px;
-  box-sizing: border-box;
-}
-
-button {
-  background: #1769e0;
-  color: white;
-  border: none;
-  border-radius: 10px;
-}
-
-textarea {
-  height: 110px;
-}
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17233b;background:#f3f6fb}
+*{box-sizing:border-box}body{margin:0;padding:18px 14px 45px}
+main{max-width:650px;margin:auto}header{text-align:center;padding:12px 0 20px}
+h1{font-size:1.6rem;margin:0 0 6px}small{color:#64748b}
+section{background:white;border-radius:17px;padding:16px;margin-bottom:14px;box-shadow:0 3px 15px #1c34500b}
+label{display:block;font-weight:650;margin-bottom:8px}
+select,textarea{width:100%;font:inherit;border:1px solid #cbd5e1;border-radius:10px;padding:12px;background:white;color:#17233b}
+textarea{min-height:105px;resize:vertical}
+button{font:inherit;border:0;border-radius:11px;padding:12px 14px;background:#1764d8;color:white;font-weight:650;cursor:pointer}
+button:disabled{opacity:.55}button.secondary{background:#e8effb;color:#174a95}
+.buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.buttons button{flex:1;min-width:115px}
+.status{font-size:.92rem;color:#475569;white-space:pre-wrap;margin-top:10px;line-height:1.45}
+.error{color:#b42318}.note{font-size:.86rem;color:#64748b;line-height:1.5}
 </style>
 </head>
-
 <body>
-
-<h1>🎤 Suthan Voice Translator</h1>
-<p>தமிழ் • English • Voice Translation</p>
-
-<div class="card">
-
-<h3>From Language</h3>
-<select id="from">
-<option value="ta-IN">Tamil</option>
-<option value="en-GB">English</option>
-</select>
-
-<h3>To Language</h3>
-<select id="to">
-<option value="en-GB">English</option>
-<option value="ta-IN">Tamil</option>
-</select>
-
-<button onclick="startVoice()">🎤 Speak</button>
-
-<h3>Your Speech</h3>
-<textarea id="speech" placeholder="Your words appear here"></textarea>
-
-<button onclick="translateText()">🌍 Translate</button>
-
-<h3>Translation</h3>
-<textarea id="result" readonly></textarea>
-
-<button onclick="speakResult()">🔊 Listen</button>
-
+<main>
+<header><h1>🎙️ Suthan Voice Translator</h1><small>தமிழ் ↔ உலக மொழிகள் · Version 2</small></header>
+<section>
+<label for="sourceLang">பேசும் மொழி / From</label>
+<select id="sourceLang"></select>
+<div style="text-align:center;margin:10px"><button type="button" class="secondary" id="swap">⇅ மொழிகளை மாற்று</button></div>
+<label for="targetLang">மொழிபெயர்க்கும் மொழி / To</label>
+<select id="targetLang"></select>
+</section>
+<section>
+<label for="sourceText">நீங்கள் பேசுவது / Input</label>
+<textarea id="sourceText" placeholder="இங்கே தமிழில் பேசுங்கள் அல்லது எழுதுங்கள்..."></textarea>
+<div class="buttons">
+<button type="button" id="mic">🎤 பேசத் தொடங்கு</button>
+<button type="button" class="secondary" id="stop">■ நிறுத்து</button>
 </div>
-
+<p class="note">iPhone Safari-யில் speech recognition ஆதரவு மாறுபடலாம். மைக்ரோஃபோன் இயங்காவிட்டாலும் உரையைத் தட்டச்சு செய்து மொழிபெயர்க்கலாம்.</p>
+<div id="micStatus" class="status" role="status">மைக்ரோஃபோன் தயார்நிலை சரிபார்க்கப்படுகிறது…</div>
+</section>
+<section>
+<div class="buttons"><button type="button" id="translate">🌍 மொழிபெயர்க்கவும்</button><button type="button" id="clear" class="secondary">அழிக்கவும்</button></div>
+<div id="translationStatus" class="status" role="status"></div>
+<label for="outputText" style="margin-top:15px">மொழிபெயர்ப்பு / Translation</label>
+<textarea id="outputText" readonly placeholder="மொழிபெயர்ப்பு இங்கே வரும்..."></textarea>
+<div class="buttons"><button type="button" id="speak">🔊 ஒலிக்கவும்</button><button type="button" class="secondary" id="copy">📋 நகலெடுக்கவும்</button></div>
+</section>
+<section><strong>இருவழி உரையாடல்</strong><p class="note">மற்றவர் பதிலளிக்கும்போது ⇅ பட்டனைத் தொட்டு, அவருடைய மொழியில் பேசவோ எழுதவோ செய்து தமிழுக்கு மொழிபெயர்க்கவும்.</p></section>
+</main>
 <script>
-function startVoice() {
-  const SpeechRecognition =
-    window.SpeechRecognition ||
-    window.webkitSpeechRecognition;
-
-  if (!SpeechRecognition) {
-    alert("Speech recognition is not supported in this browser.");
-    return;
-  }
-
-  const recognition = new SpeechRecognition();
-  recognition.lang = document.getElementById("from").value;
-
-  recognition.onresult = function(event) {
-    document.getElementById("speech").value =
-      event.results[0][0].transcript;
-  };
-
-  recognition.onerror = function(event) {
-    alert("Voice error: " + event.error);
-  };
-
-  recognition.start();
+"use strict";
+const languages=[
+["ta","தமிழ் / Tamil"],["en","English / ஆங்கிலம்"],["fr","Français / பிரெஞ்சு"],
+["de","Deutsch / ஜெர்மன்"],["zh-CN","中文 / சீனம்"],["ja","日本語 / ஜப்பானியம்"],
+["si","සිංහල / சிங்களம்"],["hi","हिन्दी / இந்தி"],["ko","한국어 / கொரியன்"],
+["ml","മലയാളം / மலையாளம்"],["te","తెలుగు / தெலுங்கு"]
+];
+const $=id=>document.getElementById(id);
+const source=$("sourceLang"),target=$("targetLang");
+for(const [code,name] of languages){
+ for(const sel of [source,target]){const opt=document.createElement("option");opt.value=code;opt.textContent=name;sel.appendChild(opt);}
 }
-
-async function translateText() {
-  const text = document.getElementById("speech").value.trim();
-  const from = document.getElementById("from").value.split("-")[0];
-  const to = document.getElementById("to").value.split("-")[0];
-  const result = document.getElementById("result");
-
-  if (!text) {
-    alert("Please speak or type something first.");
-    return;
-  }
-
-  if (from === to) {
-    result.value = text;
-    return;
-  }
-
-  result.value = "Translation service not connected yet.";
-}
-
-function speakResult() {
-  const text = document.getElementById("result").value;
-
-  if (!text) return;
-
-  const speech = new SpeechSynthesisUtterance(text);
-  speech.lang = document.getElementById("to").value;
-
-  window.speechSynthesis.speak(speech);
-}
+source.value="ta";target.value="fr";
+const micStatus=$("micStatus"),translationStatus=$("translationStatus");
+const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recognition=null, listening=false;
+function micMessage(msg,error=false){micStatus.textContent=msg;micStatus.className="status"+(error?" error":"");}
+function translationMessage(msg,error=false){translationStatus.textContent=msg;translationStatus.className="status"+(error?" error":"");}
+micMessage(Recognition?"மைக்ரோஃபோன் அம்சம் கிடைக்கிறது. 🎤 பட்டனை அழுத்துங்கள்.":"இந்த browser-இல் நேரடி குரல் அடையாளம் காணும் வசதி இல்லை. உரையைத் தட்டச்சு செய்து பயன்படுத்துங்கள்.",!Recognition);
+$("mic").addEventListener("click",()=>{
+ if(!Recognition){micMessage("Safari இந்த Speech Recognition வசதியை வழங்கவில்லை. Google Translate போன்ற செயலியில் பேசிப் பெற்ற உரையை இங்கே ஒட்டலாம்.",true);return;}
+ try{
+ if(listening){micMessage("ஏற்கெனவே பதிவு நடக்கிறது.");return;}
+ recognition=new Recognition();recognition.lang=source.value;recognition.continuous=false;recognition.interimResults=true;
+ recognition.onstart=()=>{listening=true;micMessage("கேட்கிறது… இப்போது பேசுங்கள்.");};
+ recognition.onresult=e=>{
+ let final="",interim="";
+ for(let i=e.resultIndex;i<e.results.length;i++){
+  const t=e.results[i][0].transcript;
+  if(e.results[i].isFinal)final+=t;else interim+=t;
+ }
+ if(final){$("sourceText").value=($("sourceText").value+" "+final).trim();micMessage("குரல் பதிவு செய்யப்பட்டது.");}
+ else if(interim)micMessage("கேட்கிறது: "+interim);
+ };
+ recognition.onerror=e=>{micMessage("Voice error: "+e.error+". Safari அனுமதி மற்றும் browser ஆதரவைச் சரிபார்க்கவும்.",true);};
+ recognition.onend=()=>{listening=false;};
+ recognition.start();
+ }catch(e){listening=false;micMessage("மைக்ரோஃபோன் தொடங்கவில்லை: "+e.message,true);}
+});
+$("stop").addEventListener("click",()=>{if(recognition)recognition.stop();if("speechSynthesis" in window)speechSynthesis.cancel();listening=false;micMessage("நிறுத்தப்பட்டது.");});
+$("swap").addEventListener("click",()=>{
+ const a=source.value;source.value=target.value;target.value=a;
+ const input=$("sourceText").value;$("sourceText").value=$("outputText").value;$("outputText").value=input;
+ translationMessage("மொழிகள் மாற்றப்பட்டன.");
+});
+$("clear").addEventListener("click",()=>{$("sourceText").value="";$("outputText").value="";translationMessage("");});
+$("translate").addEventListener("click",async()=>{
+ const text=$("sourceText").value.trim();
+ if(!text){translationMessage("முதலில் உரையை உள்ளிடுங்கள்.",true);return;}
+ if(source.value===target.value){$("outputText").value=text;translationMessage("இரண்டும் ஒரே மொழி.");return;}
+ const button=$("translate");button.disabled=true;translationMessage("மொழிபெயர்க்கப்படுகிறது… இணைய இணைப்பு தேவை.");
+ try{
+  const pair=source.value+"|"+target.value;
+  const url="https://api.mymemory.translated.net/get?q="+encodeURIComponent(text)+"&langpair="+encodeURIComponent(pair);
+  const response=await fetch(url);
+  if(!response.ok)throw Error("HTTP "+response.status);
+  const data=await response.json();
+  if(!data.responseData||!data.responseData.translatedText||Number(data.responseStatus)>=400)throw Error(data.responseDetails||"Translation unavailable");
+  const decoded=document.createElement("textarea");decoded.innerHTML=data.responseData.translatedText;
+  $("outputText").value=decoded.value;
+  translationMessage("மொழிபெயர்ப்பு முடிந்தது. இயந்திர மொழிபெயர்ப்பு; சரிபார்த்துப் பயன்படுத்துங்கள்.");
+ }catch(e){translationMessage("மொழிபெயர்ப்பு சேவை இயங்கவில்லை: "+e.message+". இணைய இணைப்பைச் சரிபார்க்கவும்.",true);}
+ finally{button.disabled=false;}
+});
+$("speak").addEventListener("click",()=>{
+ const text=$("outputText").value.trim();
+ if(!text){translationMessage("ஒலிக்க முதலில் மொழிபெயர்க்கவும்.",true);return;}
+ if(!("speechSynthesis" in window)){translationMessage("இந்த browser ஒலி வாசிப்பை ஆதரிக்கவில்லை.",true);return;}
+ speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text);utterance.lang=target.value;utterance.rate=.9;
+ utterance.onerror=()=>translationMessage("இந்த மொழிக்கான குரல் iPhone-இல் கிடைக்காமல் இருக்கலாம்.",true);
+ speechSynthesis.speak(utterance);
+});
+$("copy").addEventListener("click",async()=>{
+ const text=$("outputText").value;
+ if(!text)return;
+ try{await navigator.clipboard.writeText(text);translationMessage("நகலெடுக்கப்பட்டது.");}
+ catch(e){$("outputText").focus();$("outputText").select();translationMessage("உரையைத் தேர்ந்தெடுத்துள்ளோம்; Copy செய்யவும்.");}
+});
 </script>
-
-</body>
-</html>
+</body></html>
